@@ -1,0 +1,33 @@
+{
+  "name": "projectb_group7",
+  "version": "0.0.1",
+  "description": "Project C (Which character is in most pressing need for life insurance?) of Group 7, JavaScript Seminar 2016, RostLab",
+  "main": "index.js",
+  "scripts": {
+    "test": "grunt"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rostlab/JS16_ProjectB_Group7"
+  },
+  "keywords": [
+    "rostlab",
+    "got",
+    "group7",
+    "tum",
+    "seminar",
+    "life_insurance"
+  ],
+  "author": "Group 7",
+  "license": "GNU",
+  "bugs": {
+    "url": "https://github.com/Rostlab/JS16_ProjectB_Group7/issues"
+  },
+  "homepage": "https://github.com/Rostlab/JS16_ProjectB_Group7#readme",
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-jshint": "^1.0.0",
+    "grunt-contrib-qunit": "^1.0.1",
+    "grunt-contrib-watch": "^0.6.1"
+  }
+}
