@@ -1,8 +1,7 @@
 const fs = require('fs');
-const request = require('request');
+
 
 ARFF_from_file();
-//ARFF_from_database();
 
 
 
@@ -19,14 +18,9 @@ function ARFF_from_database()
 {
 	var char_data;
 	
-	request('https://got-api.bruck.me/api/characters', function (error, response, body) {
-		if (!error && response.statusCode == 200) {
-			char_data = body;
-			parseDate = parseDateDatabase;
-			fixAttr = fixAttrDatabase;
-			createARFF('./test.arff', char_data);
-		}
-	});
+	// TODO: get character data from database
+	
+	createARFF('./test.arff', char_data);
 }
 
 
@@ -121,12 +115,6 @@ function parseDate(json_element)
 	return '?';
 }
 
-function parseDateDatabase(json_element) {
-	if(json_element !== undefined) {
-		return parseInt(json_element);
-	}
-}
-
 
 
 function parseStat(json_element)
@@ -139,11 +127,12 @@ function parseStat(json_element)
 }
 
 
-//TODO: does not work for me, because each entry of enum_list terminates wit a '\r'. hope is a windows problem 
+
 function parseEnum(json_element, enum_list)
 {
 	if(json_element !== undefined) {
 		strEnum = fixStr(json_element);
+		
 		for(var i=0; i<enum_list.length; i++) {
 			
 			if( strEnum.indexOf(enum_list[i]) > -1 ) {
@@ -162,23 +151,12 @@ function fixAttr(char_data)
 	return char_data.replace("\"Born in\"", "\"Born\"").replace("\"Died in\"", "\"Died\"");
 }
 
-String.prototype.replaceAll = function(search, replacement) {
-    var target = this;
-    return target.replace(new RegExp(search, 'g'), replacement);
-};
-
-function fixAttrDatabase(char_data)
-{
-	return char_data.replace("\"dateOfBirth\"", "\"Born\"").replace("\"dateOfDeath\"", "\"Died\"").replaceAll("name", "Name").replaceAll("title", "Title");
-}
-
 
 
 function fixStr(strInput)
 {
 	return strInput.toLowerCase().replace("\'", "").replace("\n", " ");
 }
-
 
 
 
