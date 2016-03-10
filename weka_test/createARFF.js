@@ -10,22 +10,14 @@ ARFF_from_database();
 function ARFF_from_file()
 {
 	console.log("reading characters from file... ")
-	var char_data = fs.readFileSync("./characters.json");
-	console.log("done.")
 	
-	createARFF('./test.arff', char_data.toString());
-}
-
-
-
-function ARFF_from_database()
-{
-	console.log("requesting characters from database... ")
-	
-	request('https://got-api.bruck.me/api/characters', function (error, response, body) {
-		if (!error && response.statusCode == 200) {
+	fs.readFile("./characters.json", 'utf8', function (error, character_data) {
+		if( !error ) {
 			console.log("success.")
-			createARFF('./test.arff', body);
+			var json_input = JSON.parse(character_data.toString());
+			
+    		createARFF('./test.arff', json_input);
+    		
 		} else {
 			console.log("error.")
 		}
@@ -34,15 +26,84 @@ function ARFF_from_database()
 
 
 
-function createARFF(outfilepath, char_data)
+function ARFF_from_database()
+{
+	console.log("requesting characters from database... ")
+	
+	request('https://got-api.bruck.me/api/characters', function (error, response, character_data) {
+		if (!error && response.statusCode == 200) {
+			console.log("success.")
+			
+			console.log("requesting houses from database... ")
+			
+			request('https://got-api.bruck.me/api/houses', function (error, response, house_data) {
+				if (!error && response.statusCode == 200) {
+					console.log("success.")
+					
+					var json_char  = JSON.parse(character_data);
+					var json_house = JSON.parse(house_data);
+					
+					json_house = getNumHousesOverlord(json_house);
+					json_char  = addCharacterAttributes(json_char, json_house)
+					
+					createARFF('./test.arff', json_char);
+					
+				} else {
+					console.log("error.")
+				}
+			});
+		} else {
+			console.log("error.")
+		}
+	});
+}
+
+
+
+// for each house: adds the number of houses of the overlord
+function getNumHousesOverlord(json_house)
+{
+	// TODO: 
+	return json_house;
+}
+
+
+// for each character: add attributes from other collections
+function addCharacterAttributes(json_char, json_house)
+{
+	json_char.forEach( function(character){
+		
+		if( character['house'] !== undefined ) {
+			house = getElementByValue(json_house, 'name', character['house']);
+			
+			if( house !== undefined ) {		// only if database incomplete
+				
+				character['house_founded'] = house['founded'];
+				character['num_houses_overlord'] = house['num_houses_overlord'];
+			}
+		}
+	});
+	return json_char;
+}
+
+
+
+// from array of json-records: get record where key_name==value
+function getElementByValue(json_input, key_name, value)
+{
+	for(var i in json_input) {
+		if( json_input[i][key_name] == value ) {
+			return json_input[i];
+		}
+	}
+	return undefined;
+}
+
+
+
+function createARFF(outfilepath, json_input)
 {
 	console.log("creating ARFF file...")
-
-	// parse character data
-	var json_input    = JSON.parse(char_data);
-	var list_cultures = getAttrValList(json_input, 'culture');
-	var list_houses   = getAttrValList(json_input, 'allegience');
-	var list_titles   = getAttrValList(json_input, 'title');
 
 	// write ARFF header
 	var arff_output = fs.createWriteStream(outfilepath);
@@ -53,9 +114,17 @@ function createARFF(outfilepath, char_data)
 	arff_output.write('@attribute name string\n');
 	arff_output.write('@attribute dateOfBirth numeric\n');
 	arff_output.write('@attribute dateOfDeath numeric\n');
-	arff_output.write('@attribute culture {'    + getListStr(list_cultures) + '}\n');
-	arff_output.write('@attribute allegiance {' + getListStr(list_houses)   + '}\n');
-	arff_output.write('@attribute title {'      + getListStr(list_titles)   + '}\n');
+	
+	arff_output.write('@attribute culture {' + getListStr(json_input, 'culture') + '}\n');
+	arff_output.write('@attribute house {'   + getListStr(json_input, 'house')   + '}\n');
+	arff_output.write('@attribute title {'   + getListStr(json_input, 'title')   + '}\n');
+	arff_output.write('@attribute father {'  + getListStr(json_input, 'father')  + '}\n');
+	arff_output.write('@attribute mother {'  + getListStr(json_input, 'mother')  + '}\n');
+	arff_output.write('@attribute heir {'    + getListStr(json_input, 'heir')    + '}\n');
+	
+	arff_output.write('@attribute house_founded numeric\n');
+	arff_output.write('@attribute num_houses_overlord numeric\n');
+	
 	arff_output.write('@attribute status {alive,dead}\n');
 	
 	// write character data
@@ -67,9 +136,17 @@ function createARFF(outfilepath, char_data)
 		line += parseStr( character["name"]) + ",";
 		line += parseNum( character["dateOfBirth"]) + ",";
 		line += parseNum( character["dateOfDeath"]) + ",";
-		line += parseEnum( character["culture"], list_cultures) + ",";
-		line += parseEnum( character["allegiance"], list_houses) + ",";
-		line += parseEnum( character["title"], list_titles) + ",";
+		
+		line += parseStr( character["culture"]) + ",";
+		line += parseStr( character["house"]) + ",";
+		line += parseStr( character["title"]) + ",";
+		line += parseStr( character["father"]) + ",";
+		line += parseStr( character["mother"]) + ",";
+		line += parseStr( character["heir"]) + ",";
+		
+		line += parseNum( character["house_founded"]) + ",";
+		line += parseNum( character["num_houses_overlord"]) + ",";
+		
 		line += parseStat( character["dateOfDeath"]) + "\n";
 		
 		arff_output.write(line);
@@ -82,19 +159,7 @@ function createARFF(outfilepath, char_data)
 
 
 
-function readList(filepath)
-{
-	var alist = fs.readFileSync(filepath).toString().split("\n");
-	
-	for(var i=0; i<alist.length; i++) {
-		alist[i] = fixStr(alist[i]);
-	}
-	return alist;
-}
-
-
-
-function getAttrValList(json_input, attr_name)
+function getListStr(json_input, attr_name)
 {
 	var valList = [];
 	
@@ -109,14 +174,8 @@ function getAttrValList(json_input, attr_name)
 			}
 		}
 	});
-	return valList;
-}
-
-
-
-function getListStr(enum_list)
-{
-	return "\'" + enum_list.join("\', \'") + "\'";
+	
+	return "\'" + valList.join("\', \'") + "\'";
 }
 
 
