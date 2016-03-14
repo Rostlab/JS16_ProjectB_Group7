@@ -2,6 +2,11 @@
 const fs = require('fs');
 const request = require('request');
 
+//Current GoT year
+//Request for an API call to confirm that - Took from GoT wiki 
+//Reference: http://awoiaf.westeros.org/index.php/Years_after_Aegon%27s_Conquest#Year_300_After_the_Conquest
+const currentYear = 300;
+
 //ARFF_from_file();
 ARFF_from_database();
 
@@ -126,6 +131,10 @@ function createARFF(outfilepath, json_input)
 	arff_output.write('@attribute num_houses_overlord numeric\n');
 	
 	arff_output.write('@attribute status {alive,dead}\n');
+    // arff_output.write('@attribute ageOfDeath numeric\n');
+    // arff_output.write('@attribute currentAge numeric\n');
+    
+
 	
 	// write character data
 	arff_output.write('@data\n');
@@ -140,6 +149,10 @@ function createARFF(outfilepath, json_input)
 		line += parseStr( character["culture"]) + ",";
 		line += parseStr( character["house"]) + ",";
 		line += parseStr( character["title"]) + ",";
+        
+        //father and mother are useless features since every character has different parents
+        //We need generic features that can be applied to all characters and have meaning to most
+        //Feature request married / notMarried (doesnt matter to whom)
 		line += parseStr( character["father"]) + ",";
 		line += parseStr( character["mother"]) + ",";
 		line += parseStr( character["heir"]) + ",";
@@ -148,6 +161,15 @@ function createARFF(outfilepath, json_input)
 		line += parseNum( character["num_houses_overlord"]) + ",";
 		
 		line += parseStat( character["dateOfDeath"]) + "\n";
+        
+        //Add support for character age Features
+        //Feature a) Currect age of character
+        //For dead characters use age at time of death -> easier to make comparisons between most people died and current live
+        //Feature b) Age at time of death
+        
+        // line+= calcDeathAge(character) +",";
+        // line+= calcCurrentAge(character) + "\n";
+
 		
 		arff_output.write(line);
 	});
@@ -233,3 +255,19 @@ function fixStr(strInput)
 	return strInput.toLowerCase().replace("\'", "").replace("\n", " ");
 }
 
+function calcDeathAge(character){
+    if(typeof character["dateOfDeath"]!== 'undefined' && typeof character["dateOfBirth"]!== 'undefined'){
+        return character["dateOfDeath"] - character["dateOfBirth"];
+    }
+    return '?';
+}
+
+function calcCurrentAge(character){
+    if(typeof character["dateOfDeath"] !== 'undefined'){
+        return calcDeathAge(character);
+    }
+    if(typeof character["dateOfBirth"] !== 'undefined'){
+        return currentYear - character["dateOfBirth"];
+    }
+    return '?';
+}
