@@ -2,10 +2,15 @@
 const fs = require('fs');
 const request = require('request');
 
-//Current GoT year
-//Request for an API call to confirm that - Took from GoT wiki 
-//Reference: http://awoiaf.westeros.org/index.php/Years_after_Aegon%27s_Conquest#Year_300_After_the_Conquest
+// Current GoT year
+//   Request for an API call to confirm that - Took from GoT wiki 
+//   Reference: http://awoiaf.westeros.org/index.php/Years_after_Aegon%27s_Conquest#Year_300_After_the_Conquest
 const currentYear = 300;
+
+// Maximum age
+//   Maximum age of a character. Used to mark characters, who don't have a 'dateOfDeath', as 'dead'.
+const maxAge = 100;
+
 
 //ARFF_from_file();
 ARFF_from_database();
@@ -129,13 +134,11 @@ function createARFF(outfilepath, json_input)
 	
 	arff_output.write('@attribute house_founded numeric\n');
 	arff_output.write('@attribute num_houses_overlord numeric\n');
-	
-	arff_output.write("@attribute status {'alive','dead'}\n");
-    arff_output.write('@attribute ageOfDeath numeric\n');
-    arff_output.write('@attribute currentAge numeric\n');
+	arff_output.write('@attribute age numeric\n');
     
+	arff_output.write("@attribute status {'alive','dead'}\n");
 
-	
+
 	// write character data
 	arff_output.write('@data\n');
 	
@@ -149,29 +152,18 @@ function createARFF(outfilepath, json_input)
 		line += parseStr( character["culture"]) + ",";
 		line += parseStr( character["house"]) + ",";
 		line += parseStr( character["title"]) + ",";
-        
-        //father and mother are useless features since every character has different parents
-        //We need generic features that can be applied to all characters and have meaning to most
-        //Feature request married / notMarried (doesnt matter to whom)
 		line += parseStr( character["father"]) + ",";
 		line += parseStr( character["mother"]) + ",";
 		line += parseStr( character["heir"]) + ",";
-		
+		// father and mother are useless features since most characters have different parents.
+        // We need generic features that can be applied to all characters and have meaning to most
+        // Feature request married / notMarried (doesnt matter to whom)
+        
 		line += parseNum( character["house_founded"]) + ",";
 		line += parseNum( character["num_houses_overlord"]) + ",";
+		line += calcAge(character) + ",";
 		
-        //Assume average human age 80??
-		// line += parseStat( character["dateOfDeath"]) + ",";
-        line += calcStatus( character ) + ","
-        
-        //Add support for character age Features
-        //Feature a) Currect age of character
-        //For dead characters use age at time of death -> easier to make comparisons between most people died and current live
-        //Feature b) Age at time of death
-        
-        line+= calcDeathAge(character) +",";
-        line+= calcCurrentAge(character) + "\n";
-
+		line += calcStatus(character) + "\n"
 		
 		arff_output.write(line);
 	});
@@ -241,26 +233,17 @@ function parseEnum(json_element, enum_list)
 
 
 
-function parseStat(json_element)
+function calcStatus(character)
 {
-	if(json_element == undefined) {
-		return '\'alive\'';
-	} else {
-		return '\'dead\'';
-	}
-}
-
-function calcStatus(character) {
-
     if (typeof character["dateOfDeath"] !== 'undefined') {
-        return '\'dead\'';
-    } 
-    if (calcCurrentAge(character) > 80) {
-        return '\'dead\'';
+        return '\'dead\'';		// character is dead
     }
-    
+    if (typeof character["dateOfBirth"] !== 'undefined'  &&  (currentYear - character["dateOfBirth"]) > maxAge) {
+        return '\'dead\'';		// character is probably dead, but 'dateOfDeath' is missing
+    }
     return '\'alive\'';
 }
+
 
 
 function fixStr(strInput)
@@ -268,19 +251,26 @@ function fixStr(strInput)
 	return strInput.toLowerCase().replace("\'", "").replace("\n", " ");
 }
 
-function calcDeathAge(character){
-    if(typeof character["dateOfDeath"]!== 'undefined' && typeof character["dateOfBirth"]!== 'undefined'){
-        return character["dateOfDeath"] - character["dateOfBirth"];
-    }
-    return '?';
+
+
+// Add support for character age
+function calcAge(character)
+{
+	if(typeof character["dateOfBirth"] !== 'undefined') {
+    
+    	if(typeof character["dateOfDeath"] !== 'undefined'){
+        	return character["dateOfDeath"] - character["dateOfBirth"];	// dead: calculate age of death
+        } else {
+        	var age = currentYear - character["dateOfBirth"];			// alive: calculate current age
+        	
+        	if( age > maxAge ) {
+        		return '?';												// probably dead
+        	} else {
+        		return age;
+        	}
+        }
+	}
+	return '?';
 }
 
-function calcCurrentAge(character){
-    if(typeof character["dateOfDeath"] !== 'undefined'){
-        return calcDeathAge(character);
-    }
-    if(typeof character["dateOfBirth"] !== 'undefined'){
-        return currentYear - character["dateOfBirth"];
-    }
-    return '?';
-}
+
