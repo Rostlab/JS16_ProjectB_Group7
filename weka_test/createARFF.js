@@ -10,6 +10,7 @@ const currentYear = 300;
 // Maximum age
 //   Maximum age of a character. Used to mark characters, who don't have a 'dateOfDeath', as 'dead'.
 const maxAge = 100;
+const ageGroups = [10,30,60,maxAge];
 
 
 //ARFF_from_file();
@@ -135,7 +136,10 @@ function createARFF(outfilepath, json_input)
 	arff_output.write('@attribute house_founded numeric\n');
 	arff_output.write('@attribute num_houses_overlord numeric\n');
 	arff_output.write('@attribute age numeric\n');
-    
+
+
+    arff_output.write('@attribute ageGroup {' + getAgeGroupString(ageGroups) + '}\n');
+        
 	arff_output.write("@attribute status {'alive','dead'}\n");
 
 
@@ -162,6 +166,9 @@ function createARFF(outfilepath, json_input)
 		line += parseNum( character["house_founded"]) + ",";
 		line += parseNum( character["num_houses_overlord"]) + ",";
 		line += calcAge(character) + ",";
+        
+        line += calcAgeGroup(character) + ",";
+
 		
 		line += calcStatus(character) + "\n"
 		
@@ -273,4 +280,19 @@ function calcAge(character)
 	return '?';
 }
 
+function getAgeGroupString(array){
+    return "\'" + array.join("\', \'") + "\'";
+}
 
+function calcAgeGroup(character){
+    var age = calcAge(character);
+        
+    if( age !== '?'){
+        for(var i=0; i<ageGroups.length-1; i++){
+            if(age <= ageGroups[i] ){
+                return "\'" + ageGroups[i] + "\'";
+            }
+        }
+    }
+    return '?';
+}
