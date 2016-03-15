@@ -130,9 +130,9 @@ function createARFF(outfilepath, json_input)
 	arff_output.write('@attribute house_founded numeric\n');
 	arff_output.write('@attribute num_houses_overlord numeric\n');
 	
-	arff_output.write('@attribute status {alive,dead}\n');
-    // arff_output.write('@attribute ageOfDeath numeric\n');
-    // arff_output.write('@attribute currentAge numeric\n');
+	arff_output.write("@attribute status {'alive','dead'}\n");
+    arff_output.write('@attribute ageOfDeath numeric\n');
+    arff_output.write('@attribute currentAge numeric\n');
     
 
 	
@@ -160,15 +160,15 @@ function createARFF(outfilepath, json_input)
 		line += parseNum( character["house_founded"]) + ",";
 		line += parseNum( character["num_houses_overlord"]) + ",";
 		
-		line += parseStat( character["dateOfDeath"]) + "\n";
+		line += parseStat( character["dateOfDeath"]) + ",";
         
         //Add support for character age Features
         //Feature a) Currect age of character
         //For dead characters use age at time of death -> easier to make comparisons between most people died and current live
         //Feature b) Age at time of death
         
-        // line+= calcDeathAge(character) +",";
-        // line+= calcCurrentAge(character) + "\n";
+        line+= calcDeathAge(character) +",";
+        line+= calcCurrentAge(character) + "\n";
 
 		
 		arff_output.write(line);
@@ -242,9 +242,9 @@ function parseEnum(json_element, enum_list)
 function parseStat(json_element)
 {
 	if(json_element == undefined) {
-		return 'alive';
+		return '\'alive\'';
 	} else {
-		return 'dead';
+		return '\'dead\'';
 	}
 }
 
