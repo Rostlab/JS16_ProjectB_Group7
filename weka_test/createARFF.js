@@ -160,7 +160,9 @@ function createARFF(outfilepath, json_input)
 		line += parseNum( character["house_founded"]) + ",";
 		line += parseNum( character["num_houses_overlord"]) + ",";
 		
-		line += parseStat( character["dateOfDeath"]) + ",";
+        //Assume average human age 80??
+		// line += parseStat( character["dateOfDeath"]) + ",";
+        line += calcStatus( character ) + ","
         
         //Add support for character age Features
         //Feature a) Currect age of character
@@ -248,6 +250,17 @@ function parseStat(json_element)
 	}
 }
 
+function calcStatus(character) {
+
+    if (typeof character["dateOfDeath"] !== 'undefined') {
+        return '\'dead\'';
+    } 
+    if (calcCurrentAge(character) > 80) {
+        return '\'dead\'';
+    }
+    
+    return '\'alive\'';
+}
 
 
 function fixStr(strInput)
