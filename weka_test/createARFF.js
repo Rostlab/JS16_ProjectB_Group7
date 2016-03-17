@@ -20,17 +20,17 @@ ARFF_from_database();
 
 function ARFF_from_file()
 {
-	console.log("reading characters from file... ")
+	console.log("reading characters from file... ");
 	
 	fs.readFile("./characters.json", 'utf8', function (error, character_data) {
 		if( !error ) {
-			console.log("success.")
+			console.log("success.");
 			var json_input = JSON.parse(character_data.toString());
 			
     		createARFF('./test.arff', json_input);
     		
 		} else {
-			console.log("error.")
+			console.log("error.");
 		}
 	});
 }
@@ -39,32 +39,32 @@ function ARFF_from_file()
 
 function ARFF_from_database()
 {
-	console.log("requesting characters from database... ")
+	console.log("requesting characters from database... ");
 	
 	request('https://got-api.bruck.me/api/characters', function (error, response, character_data) {
 		if (!error && response.statusCode == 200) {
-			console.log("success.")
+			console.log("success.");
 			
-			console.log("requesting houses from database... ")
+			console.log("requesting houses from database... ");
 			
 			request('https://got-api.bruck.me/api/houses', function (error, response, house_data) {
 				if (!error && response.statusCode == 200) {
-					console.log("success.")
+					console.log("success.");
 					
 					var json_char  = JSON.parse(character_data);
 					var json_house = JSON.parse(house_data);
 					
 					json_house = getNumHousesOverlord(json_house);
-					json_char  = addCharacterAttributes(json_char, json_house)
+					json_char  = addCharacterAttributes(json_char, json_house);
 					
 					createARFF('./test.arff', json_char);
 					
 				} else {
-					console.log("error.")
+					console.log("error.");
 				}
 			});
 		} else {
-			console.log("error.")
+			console.log("error.");
 		}
 	});
 }
@@ -74,9 +74,10 @@ function ARFF_from_database()
 // for each house: adds the number of houses of the overlord
 function getNumHousesOverlord(json_house)
 {
-	// TODO: 
+	// TODO: count overlord's houses (still missing in database)
 	return json_house;
 }
+
 
 
 // for each character: add attributes from other collections
@@ -114,7 +115,7 @@ function getElementByValue(json_input, key_name, value)
 
 function createARFF(outfilepath, json_input)
 {
-	console.log("creating ARFF file...")
+	console.log("creating ARFF file...");
 
 	// write ARFF header
 	var arff_output = fs.createWriteStream(outfilepath);
@@ -166,11 +167,9 @@ function createARFF(outfilepath, json_input)
 		line += parseNum( character["house_founded"]) + ",";
 		line += parseNum( character["num_houses_overlord"]) + ",";
 		line += calcAge(character) + ",";
-        
         line += calcAgeGroup(character) + ",";
-
 		
-		line += calcStatus(character) + "\n"
+		line += calcStatus(character) + "\n";
 		
 		arff_output.write(line);
 	});
@@ -189,7 +188,7 @@ function getListStr(json_input, attr_name)
 	json_input.forEach( function(character){
 		var val = character[attr_name];
 		
-		if( val != undefined ) {
+		if( val !== undefined ) {
 			var strVal = fixStr( String(val) );
 			
 			if( valList.indexOf(strVal) == -1 ) {
@@ -280,9 +279,13 @@ function calcAge(character)
 	return '?';
 }
 
+
+
 function getAgeGroupString(array){
     return "\'" + array.join("\', \'") + "\'";
 }
+
+
 
 function calcAgeGroup(character){
     var age = calcAge(character);
@@ -296,3 +299,4 @@ function calcAgeGroup(character){
     }
     return '?';
 }
+
