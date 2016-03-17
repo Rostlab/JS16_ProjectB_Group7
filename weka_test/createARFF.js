@@ -1,71 +1,179 @@
+
 const fs = require('fs');
+const request = require('request');
+
+// Current GoT year
+//   Request for an API call to confirm that - Took from GoT wiki 
+//   Reference: http://awoiaf.westeros.org/index.php/Years_after_Aegon%27s_Conquest#Year_300_After_the_Conquest
+const currentYear = 300;
+
+// Maximum age
+//   Maximum age of a character. Used to mark characters, who don't have a 'dateOfDeath', as 'dead'.
+const maxAge = 100;
+const ageGroups = [10,30,60,maxAge];
 
 
-ARFF_from_file();
+//ARFF_from_file();
+ARFF_from_database();
 
 
 
 function ARFF_from_file()
 {
-	var char_data = fs.readFileSync("./characters.json");
+	console.log("reading characters from file... ")
 	
-	createARFF('./test.arff', char_data.toString());
+	fs.readFile("./characters.json", 'utf8', function (error, character_data) {
+		if( !error ) {
+			console.log("success.")
+			var json_input = JSON.parse(character_data.toString());
+			
+    		createARFF('./test.arff', json_input);
+    		
+		} else {
+			console.log("error.")
+		}
+	});
 }
 
 
 
 function ARFF_from_database()
 {
-	var char_data;
+	console.log("requesting characters from database... ")
 	
-	// TODO: get character data from database
-	
-	createARFF('./test.arff', char_data);
+	request('https://got-api.bruck.me/api/characters', function (error, response, character_data) {
+		if (!error && response.statusCode == 200) {
+			console.log("success.")
+			
+			console.log("requesting houses from database... ")
+			
+			request('https://got-api.bruck.me/api/houses', function (error, response, house_data) {
+				if (!error && response.statusCode == 200) {
+					console.log("success.")
+					
+					var json_char  = JSON.parse(character_data);
+					var json_house = JSON.parse(house_data);
+					
+					json_house = getNumHousesOverlord(json_house);
+					json_char  = addCharacterAttributes(json_char, json_house)
+					
+					createARFF('./test.arff', json_char);
+					
+				} else {
+					console.log("error.")
+				}
+			});
+		} else {
+			console.log("error.")
+		}
+	});
 }
 
 
 
-function createARFF(outfilepath, char_data)
+// for each house: adds the number of houses of the overlord
+function getNumHousesOverlord(json_house)
+{
+	// TODO: 
+	return json_house;
+}
+
+
+// for each character: add attributes from other collections
+function addCharacterAttributes(json_char, json_house)
+{
+	json_char.forEach( function(character){
+		
+		if( character['house'] !== undefined ) {
+			house = getElementByValue(json_house, 'name', character['house']);
+			
+			if( house !== undefined ) {		// only if database incomplete
+				
+				character['house_founded'] = house['founded'];
+				character['num_houses_overlord'] = house['num_houses_overlord'];
+			}
+		}
+	});
+	return json_char;
+}
+
+
+
+// from array of json-records: get record where key_name==value
+function getElementByValue(json_input, key_name, value)
+{
+	for(var i in json_input) {
+		if( json_input[i][key_name] == value ) {
+			return json_input[i];
+		}
+	}
+	return undefined;
+}
+
+
+
+function createARFF(outfilepath, json_input)
 {
 	console.log("creating ARFF file...")
-	
-	var list_cultures = readList('./list_cultures.txt');
-	var list_houses   = readList('./list_houses.txt');
-	var list_titles   = readList('./list_titles.txt');
-	
+
 	// write ARFF header
 	var arff_output = fs.createWriteStream(outfilepath);
-	arff_output.write('% ARFF file\n% JST - Project B - Group 7\n% v2\n%\n');
+	arff_output.write('% ARFF file\n% JST - Project B - Group 7\n% v3\n%\n');
 	arff_output.write('@relation \'got_plod\'\n');
 	
 	// write attribute definitions
 	arff_output.write('@attribute name string\n');
-	arff_output.write('@attribute birth_date numeric\n');
-	arff_output.write('@attribute death_date numeric\n');
-	arff_output.write('@attribute culture {'    + getListStr(list_cultures) + '}\n');
-	arff_output.write('@attribute allegiance {' + getListStr(list_houses)   + '}\n');
-	arff_output.write('@attribute title {'      + getListStr(list_titles)   + '}\n');
-	//arff_output.write('@attribute spouse string\n');
-	arff_output.write('@attribute status {alive,dead}\n');
+	arff_output.write('@attribute dateOfBirth numeric\n');
+	arff_output.write('@attribute dateOfDeath numeric\n');
 	
+	arff_output.write('@attribute culture {' + getListStr(json_input, 'culture') + '}\n');
+	arff_output.write('@attribute house {'   + getListStr(json_input, 'house')   + '}\n');
+	arff_output.write('@attribute title {'   + getListStr(json_input, 'title')   + '}\n');
+	arff_output.write('@attribute father {'  + getListStr(json_input, 'father')  + '}\n');
+	arff_output.write('@attribute mother {'  + getListStr(json_input, 'mother')  + '}\n');
+	arff_output.write('@attribute heir {'    + getListStr(json_input, 'heir')    + '}\n');
+	
+	arff_output.write('@attribute house_founded numeric\n');
+	arff_output.write('@attribute num_houses_overlord numeric\n');
+	arff_output.write('@attribute age numeric\n');
+
+
+    arff_output.write('@attribute ageGroup {' + getAgeGroupString(ageGroups) + '}\n');
+        
+	arff_output.write("@attribute status {'alive','dead'}\n");
+
+
 	// write character data
 	arff_output.write('@data\n');
-	
-	var json_input = JSON.parse( fixAttr(char_data) );
 	
 	json_input.forEach( function(character){
 		var line = "";
 		
-		line += "\'" + character["Name"] + "\',";
-		line += parseDate( character["Born"]) + ",";
-		line += parseDate( character["Died"]) + ",";
-		line += parseEnum( character["Culture"], list_cultures) + ",";
-		line += parseEnum( character["Allegiance"], list_houses) + ",";
-		line += parseEnum( character["Title"], list_titles) + ",";
-		line += parseStat( character["Died"]) + "\n";
+		line += parseStr( character["name"]) + ",";
+		line += parseNum( character["dateOfBirth"]) + ",";
+		line += parseNum( character["dateOfDeath"]) + ",";
+		
+		line += parseStr( character["culture"]) + ",";
+		line += parseStr( character["house"]) + ",";
+		line += parseStr( character["title"]) + ",";
+		line += parseStr( character["father"]) + ",";
+		line += parseStr( character["mother"]) + ",";
+		line += parseStr( character["heir"]) + ",";
+		// father and mother are useless features since most characters have different parents.
+        // We need generic features that can be applied to all characters and have meaning to most
+        // Feature request married / notMarried (doesnt matter to whom)
+        
+		line += parseNum( character["house_founded"]) + ",";
+		line += parseNum( character["num_houses_overlord"]) + ",";
+		line += calcAge(character) + ",";
+        
+        line += calcAgeGroup(character) + ",";
+
+		
+		line += calcStatus(character) + "\n"
 		
 		arff_output.write(line);
-	})
+	});
 	
 	// close
 	arff_output.end('%\n%');
@@ -74,56 +182,43 @@ function createARFF(outfilepath, char_data)
 
 
 
-function readList(filepath)
+function getListStr(json_input, attr_name)
 {
-	var alist = fs.readFileSync(filepath).toString().split("\n");
+	var valList = [];
 	
-	for(var i=0; i<alist.length; i++) {
-		alist[i] = fixStr(alist[i]);
-	}
-	return alist;
-}
-
-
-
-function getListStr(enum_list)
-{
-	return "\'" + enum_list.join("\', \'") + "\'";
-}
-
-
-
-function parseDate(json_element)
-{
-	if(json_element !== undefined) {
-		var strDate = fixStr(json_element);
+	json_input.forEach( function(character){
+		var val = character[attr_name];
 		
-		var pos_num = strDate.search(/\d/);
-		var pos_ac  = strDate.indexOf(" ac");
-		var pos_bc  = strDate.indexOf(" bc");
-		
-		if( pos_num > -1 ) {
+		if( val != undefined ) {
+			var strVal = fixStr( String(val) );
 			
-			if( pos_ac > -1 ) {
-				return parseInt( strDate.slice(pos_num, pos_ac) );
-			}
-			else if ( pos_bc > -1 ) {
-				return - parseInt( strDate.slice(pos_num, pos_bc) );
+			if( valList.indexOf(strVal) == -1 ) {
+				valList.push(strVal);
 			}
 		}
+	});
+	
+	return "\'" + valList.join("\', \'") + "\'";
+}
+
+
+
+function parseStr(json_element)
+{
+	if(json_element !== undefined) {
+		return "\'" + fixStr(json_element) + "\'";
 	}
 	return '?';
 }
 
 
 
-function parseStat(json_element)
+function parseNum(json_element)
 {
-	if(json_element == undefined) {
-		return 'alive';
-	} else {
-		return 'dead';
+	if(json_element !== undefined) {
+		return parseInt(json_element);
 	}
+	return '?';
 }
 
 
@@ -132,7 +227,7 @@ function parseEnum(json_element, enum_list)
 {
 	if(json_element !== undefined) {
 		strEnum = fixStr(json_element);
-		
+
 		for(var i=0; i<enum_list.length; i++) {
 			
 			if( strEnum.indexOf(enum_list[i]) > -1 ) {
@@ -145,10 +240,15 @@ function parseEnum(json_element, enum_list)
 
 
 
-// fix duplicate identifiers of attributes 'Born' and 'Died'
-function fixAttr(char_data)
+function calcStatus(character)
 {
-	return char_data.replace("\"Born in\"", "\"Born\"").replace("\"Died in\"", "\"Died\"");
+    if (typeof character["dateOfDeath"] !== 'undefined') {
+        return '\'dead\'';		// character is dead
+    }
+    if (typeof character["dateOfBirth"] !== 'undefined'  &&  (currentYear - character["dateOfBirth"]) > maxAge) {
+        return '\'dead\'';		// character is probably dead, but 'dateOfDeath' is missing
+    }
+    return '\'alive\'';
 }
 
 
@@ -160,3 +260,39 @@ function fixStr(strInput)
 
 
 
+// Add support for character age
+function calcAge(character)
+{
+	if(typeof character["dateOfBirth"] !== 'undefined') {
+    
+    	if(typeof character["dateOfDeath"] !== 'undefined'){
+        	return character["dateOfDeath"] - character["dateOfBirth"];	// dead: calculate age of death
+        } else {
+        	var age = currentYear - character["dateOfBirth"];			// alive: calculate current age
+        	
+        	if( age > maxAge ) {
+        		return '?';												// probably dead
+        	} else {
+        		return age;
+        	}
+        }
+	}
+	return '?';
+}
+
+function getAgeGroupString(array){
+    return "\'" + array.join("\', \'") + "\'";
+}
+
+function calcAgeGroup(character){
+    var age = calcAge(character);
+        
+    if( age !== '?'){
+        for(var i=0; i<ageGroups.length-1; i++){
+            if(age <= ageGroups[i] ){
+                return "\'" + ageGroups[i] + "\'";
+            }
+        }
+    }
+    return '?';
+}
