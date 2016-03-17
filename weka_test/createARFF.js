@@ -1,16 +1,16 @@
 
-const fs = require('fs');
-const request = require('request');
+var fs = require('fs');
+var request = require('request');
 
 // Current GoT year
 //   Request for an API call to confirm that - Took from GoT wiki 
 //   Reference: http://awoiaf.westeros.org/index.php/Years_after_Aegon%27s_Conquest#Year_300_After_the_Conquest
-const currentYear = 300;
+var currentYear = 300;
 
 // Maximum age
 //   Maximum age of a character. Used to mark characters, who don't have a 'dateOfDeath', as 'dead'.
-const maxAge = 100;
-const ageGroups = [10,30,60,maxAge];
+var maxAge = 100;
+var ageGroups = [10,30,60,maxAge];
 
 
 //ARFF_from_file();
@@ -57,6 +57,8 @@ function ARFF_from_database()
 					json_house = getNumHousesOverlord(json_house);
 					json_char  = addCharacterAttributes(json_char, json_house);
 					
+					// TODO: apply filtering to json_char
+					
 					createARFF('./test.arff', json_char);
 					
 				} else {
@@ -85,13 +87,13 @@ function addCharacterAttributes(json_char, json_house)
 {
 	json_char.forEach( function(character){
 		
-		if( character['house'] !== undefined ) {
-			house = getElementByValue(json_house, 'name', character['house']);
+		if( character.house !== undefined ) {
+			house = getElementByValue(json_house, 'name', character.house);
 			
 			if( house !== undefined ) {		// only if database incomplete
 				
-				character['house_founded'] = house['founded'];
-				character['num_houses_overlord'] = house['num_houses_overlord'];
+				character.house_founded = house.founded;
+				character.num_houses_overlord = house.num_houses_overlord;
 			}
 		}
 	});
@@ -119,7 +121,7 @@ function createARFF(outfilepath, json_input)
 
 	// write ARFF header
 	var arff_output = fs.createWriteStream(outfilepath);
-	arff_output.write('% ARFF file\n% JST - Project B - Group 7\n% v3\n%\n');
+	arff_output.write('% ARFF file\n% JST - Project B - Group 7\n%\n');
 	arff_output.write('@relation \'got_plod\'\n');
 	
 	// write attribute definitions
@@ -137,10 +139,9 @@ function createARFF(outfilepath, json_input)
 	arff_output.write('@attribute house_founded numeric\n');
 	arff_output.write('@attribute num_houses_overlord numeric\n');
 	arff_output.write('@attribute age numeric\n');
-
-
     arff_output.write('@attribute ageGroup {' + getAgeGroupString(ageGroups) + '}\n');
-        
+	arff_output.write("@attribute gender {'male', 'female'}\n");
+
 	arff_output.write("@attribute status {'alive','dead'}\n");
 
 
@@ -150,24 +151,25 @@ function createARFF(outfilepath, json_input)
 	json_input.forEach( function(character){
 		var line = "";
 		
-		line += parseStr( character["name"]) + ",";
-		line += parseNum( character["dateOfBirth"]) + ",";
-		line += parseNum( character["dateOfDeath"]) + ",";
+		line += parseStr( character.name ) + ",";
+		line += parseNum( character.dateOfBirth ) + ",";
+		line += parseNum( character.dateOfDeath ) + ",";
 		
-		line += parseStr( character["culture"]) + ",";
-		line += parseStr( character["house"]) + ",";
-		line += parseStr( character["title"]) + ",";
-		line += parseStr( character["father"]) + ",";
-		line += parseStr( character["mother"]) + ",";
-		line += parseStr( character["heir"]) + ",";
+		line += parseStr( character.culture ) + ",";
+		line += parseStr( character.house ) + ",";
+		line += parseStr( character.title ) + ",";
+		line += parseStr( character.father ) + ",";
+		line += parseStr( character.mother ) + ",";
+		line += parseStr( character.heir ) + ",";
 		// father and mother are useless features since most characters have different parents.
         // We need generic features that can be applied to all characters and have meaning to most
         // Feature request married / notMarried (doesnt matter to whom)
         
-		line += parseNum( character["house_founded"]) + ",";
-		line += parseNum( character["num_houses_overlord"]) + ",";
+		line += parseNum( character.house_founded ) + ",";
+		line += parseNum( character.num_houses_overlord ) + ",";
 		line += calcAge(character) + ",";
         line += calcAgeGroup(character) + ",";
+		line += calcGender(character) + ",";
 		
 		line += calcStatus(character) + "\n";
 		
@@ -241,10 +243,10 @@ function parseEnum(json_element, enum_list)
 
 function calcStatus(character)
 {
-    if (typeof character["dateOfDeath"] !== 'undefined') {
+    if (typeof character.dateOfDeath !== 'undefined') {
         return '\'dead\'';		// character is dead
     }
-    if (typeof character["dateOfBirth"] !== 'undefined'  &&  (currentYear - character["dateOfBirth"]) > maxAge) {
+    if (typeof character.dateOfBirth !== 'undefined'  &&  (currentYear - character.dateOfBirth) > maxAge) {
         return '\'dead\'';		// character is probably dead, but 'dateOfDeath' is missing
     }
     return '\'alive\'';
@@ -262,15 +264,15 @@ function fixStr(strInput)
 // Add support for character age
 function calcAge(character)
 {
-	if(typeof character["dateOfBirth"] !== 'undefined') {
+	if(typeof character.dateOfBirth !== 'undefined') {
     
-    	if(typeof character["dateOfDeath"] !== 'undefined'){
-        	return character["dateOfDeath"] - character["dateOfBirth"];	// dead: calculate age of death
+    	if(typeof character.dateOfDeath !== 'undefined'){
+        	return character.dateOfDeath - character.dateOfBirth;	// dead: calculate age of death
         } else {
-        	var age = currentYear - character["dateOfBirth"];			// alive: calculate current age
+        	var age = currentYear - character.dateOfBirth;			// alive: calculate current age
         	
         	if( age > maxAge ) {
-        		return '?';												// probably dead
+        		return '?';											// probably dead
         	} else {
         		return age;
         	}
@@ -291,7 +293,7 @@ function calcAgeGroup(character){
     var age = calcAge(character);
         
     if( age !== '?'){
-        for(var i=0; i<ageGroups.length-1; i++){
+        for(var i=0; i<ageGroups.length; i++){
             if(age <= ageGroups[i] ){
                 return "\'" + ageGroups[i] + "\'";
             }
@@ -299,4 +301,23 @@ function calcAgeGroup(character){
     }
     return '?';
 }
+
+
+
+function calcGender(character)
+{
+	if( character.male === true ) {
+		return '\'male\'';
+	}
+	else if( character.male === false ) {
+		return '\'female\'';
+	}
+	else {
+		// suggestion: try to find out the gender using the title or name.
+		return '?';
+	}
+}
+
+
+
 
