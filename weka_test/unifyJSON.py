@@ -35,6 +35,13 @@ def readCharacter(name):
 
 
 
+def processData(cdata):
+	# TODO: change attribute names, parse numbers, etc.
+
+	return cdata
+
+
+
 def unifyJSON(outfilepath):
 
     data = []
@@ -43,7 +50,9 @@ def unifyJSON(outfilepath):
 
     for name in os.listdir("Data/Charachters/info/"):
         print(name)
-        data.append( readCharacter(name) )
+        cdata = readCharacter(name)
+        cdata = processData(cdata)
+        data.append(cdata)
 
     print("done.")
 
@@ -60,4 +69,5 @@ def unifyJSON(outfilepath):
 
 
 unifyJSON("characters.json")
+
 

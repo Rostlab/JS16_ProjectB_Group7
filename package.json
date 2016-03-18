@@ -1,8 +1,8 @@
 {
-  "name": "projectb_group7",
+  "name": "gotarffplod",
   "version": "0.0.1",
   "description": "Project C (Which character is in most pressing need for life insurance?) of Group 7, JavaScript Seminar 2016, RostLab",
-  "main": "index.js",
+  "main": "npm.js",
   "scripts": {
     "test": "grunt"
   },
