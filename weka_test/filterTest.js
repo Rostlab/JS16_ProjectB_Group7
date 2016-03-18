@@ -25,10 +25,11 @@ f.and(fDB.attribute_filter(['attr1','attr2']));
 f.and(fDB.attribute_filter(['attr1','attr2'],1));
 
 // create a custum filter
-f.and(new fDB.filter_component(function(current,params) {
+f.and(new fDB.filter_component(function(current) {
 	// current is a charachter contained in obj
 	// params are defined in the next parameter
-	name = params.name;
+	// TODO: check if actually i can reference the params this way
+	name = this.params.name;
 	// returns true if the charachter satisfies the filter
 	return true;
 },{'name':''}));

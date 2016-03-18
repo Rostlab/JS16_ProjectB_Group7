@@ -7,18 +7,18 @@ module.exports = {
 		this.num_true_optional_filters = 0;
 		this.evaluate = function(object) {
 			return filterEach(object,this.required_filters,this.optional_filters,this.num_true_optional_filters);
-		}
+		};
 		this.and = function(filter_component) {
 			this.required_filters.push(filter_component);
-		}
+		};
 		this.or = function(filter_component) {
 			this.optional_filters.push(filter_component);
-		}
+		};
 		this.optionals = function(n) {
 			if (n < this.optional_filters.length) {
 				this.num_true_optional_filters = n;
 			}
-		}
+		};
 	},
 
 	// component of a filter: a function and some parameters
@@ -30,7 +30,7 @@ module.exports = {
 			var f = new module.exports.filter();
 			f.and(this);
 			return f.evaluate(object);
-		}
+		};
 	},
 
 	// returns a new filter that asks for the attributes to be present
@@ -55,65 +55,68 @@ module.exports = {
 		weka_percentages = {};
 		return new module.exports.filter_component(filterByPercentage,{'min_percentage':percentage,'percentage_list':weka_percentages});
 	}
-}
+};
 
-filterByName = function(current,params) {
+filterByName = function(current) {
+	//var params = this.params;
 	// if there is no parameters list, then the object is ok
-	if (params.name_list == undefined) {
+	console.log(params);
+	if (params.name_list === undefined) {
 		return true;
 	}
 	// if we don't ask for minimum attributes, we are requiring all
-	if (params.num_names == undefined) {
+	if (params.num_names === undefined) {
 		params.num_names = params.name_list.length;
 	}
 	var tolerancy = params.name_list.length - params.num_names;
 	if (tolerancy < 0) {return false;}
-	for (nameId in name_list) {
-		if (current[name_list[nameId]] == undefined) {
+	for (var nameId in name_list) {
+		if (current[name_list[nameId]] === undefined) {
 			tolerancy--;
 			if (tolerancy < 0) {return false;}
 		}
 	}
 	return true;
-}
+};
 
-filterByPercentage = function(current,params) {
+filterByPercentage = function(current) {
 	// if there is no minimum percentage, asume 0 (all is ok)
-	if (params.min_percentage == undefined) {
+	if (this.params.min_percentage === undefined) {
 		return true;
 	}
 	// if there are no list of percentages, there is no attribute that we can evaluate
-	if (params.percentage_list == undefined) {
+	if (this.params.percentage_list === undefined) {
 		return false;
 	}
 	var actual_percentage = 0;
-	for (attributeId in current) {
+	for (var attributeId in current) {
 		attribute = current[attributeId];
-		if(params.percentage_list[attribute] != undefined) {
+		if(params.percentage_list[attribute] !== undefined) {
 			// todo: parse float?
 			actual_percentage += params.percentage_list;
 		}
 	}
 	return (actual_percentage > params.min_percentage);
-}
+};
 
 function filterEach(obj,required_filters,optional_filters,num_true_filters) {
-	if (num_true_filters == undefined) {
-		num_true_filters = 0;
+	if (num_true_filters === undefined) {
+		// the default is one
+		num_true_filters = fun_list.length - 1;
 	}
-	for (idObj in obj) {
+	for (var idObj in obj) {
 		// required filters
-		for (idRequired in required_filters) {
+		for (var idRequired in required_filters) {
 			var filter = required_filters[idRequired];
-			if(!filter.fun(obj[idObj],filter.params)) {
+			if(!filter.fun(obj[idObj])) {
 				delete obj[id];
 				break;
 			}
 		}
 		// optional Filters
-		for (idOptional in optional_filters) {
+		for (var idOptional in optional_filters) {
 			var tolerancy = fun_list.length - num_true_filters;
-			if(!filter.fun(obj[idObj],filter.params)) {
+			if(!filter.fun(obj[idObj])) {
 				tolerancy--;
 				if (tolerancy < 0) {
 					delete obj[id];
@@ -123,5 +126,5 @@ function filterEach(obj,required_filters,optional_filters,num_true_filters) {
 		}
 	}
 	return obj;
-}
+};
 
