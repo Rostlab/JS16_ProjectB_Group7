@@ -1,7 +1,8 @@
-fDB = require('./filterDB.js');
+const fDB = require('./filterDB.js');
+const fs = require('fs');
 
 var f = new fDB.filter();
-var obj = {};
+var obj = {name:'emily'};
 
 // create all filters in the library and require all to be satisfied
 
@@ -12,7 +13,7 @@ f.and(fDB.popularity_filter());
 // charachters that has the sum of the attributes rank (weka rank) at least 20
 f.and(fDB.meaningful_attributes_filter(20));
 
-// apply two filters and require at least 2 to be satisfied
+// apply three filters and require at least 2 to be satisfied
 f.or(fDB.dead_alive_filter());
 f.or(fDB.popularity_filter());
 f.or(fDB.meaningful_attributes_filter(20));
