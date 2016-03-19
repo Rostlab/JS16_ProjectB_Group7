@@ -1,6 +1,8 @@
 
 var fs = require('fs');
 var request = require('request');
+var getPopularity = require("./popularity.js");
+
 
 // Current GoT year
 //   Request for an API call to confirm that - Took from GoT wiki 
@@ -119,6 +121,7 @@ function createARFF(outfilepath, json_input)
 {
 	console.log("creating ARFF file...");
 
+    
 	// write ARFF header
 	var arff_output = fs.createWriteStream(outfilepath);
 	arff_output.write('% ARFF file\n% JST - Project B - Group 7\n%\n');
@@ -143,6 +146,8 @@ function createARFF(outfilepath, json_input)
 	arff_output.write("@attribute gender {'male', 'female'}\n");
 
 	arff_output.write("@attribute status {'alive','dead'}\n");
+
+    getPopularity(json_input,"./pagerank/");
 
 
 	// write character data
