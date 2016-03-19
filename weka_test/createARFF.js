@@ -2,6 +2,8 @@
 var fs = require('fs');
 var request = require('request');
 var getPopularity = require("./popularity.js");
+var promise = require('promise');
+
 
 
 // Current GoT year
@@ -147,7 +149,8 @@ function createARFF(outfilepath, json_input)
 
 	arff_output.write("@attribute status {'alive','dead'}\n");
 
-    getPopularity(json_input,"./pagerank/");
+    var popularity = getPopularity(json_input,"./pagerank/");
+
 
 
 	// write character data

@@ -20,7 +20,7 @@ function getPopularityAll (dataset, pgFolder) {
         function (err, data) {
           if (err) {
             console.error(character.name + ': ' + err);
-            resolve(new ResultObject(character.name));
+            resolve(new ResultObject(character.name,err));
             return;
           // reject(err)
           }
@@ -55,15 +55,18 @@ function getPopularityAll (dataset, pgFolder) {
             resolve(obj);
           } catch(exc) {
             console.error(character.name + " " + exc );
-            resolve(new ResultObject(character.name));
+            resolve(new ResultObject(character.name,exc));
           }
           return;
         })
     }))
   })
 
-  promise.all(promisedResults).then(function (results) {
+    promise.all(promisedResults).then(function (results) {
     results.forEach(function (result) {
+        if(result.error){
+            return;
+        }
       if (result.links > maxLink) {
         maxLink = result.links;
       }
@@ -84,17 +87,21 @@ function getPopularityAll (dataset, pgFolder) {
       }
     })
     results.forEach(function (element) {
+        if(element.error){
+            return;
+        }
       element.normalizedScore = (element.score - minScore) / (maxScore - minScore);
       element.normalizedConnections = (element.connections - minScore) / (maxCon - minCon);
       element.normalizedLinks = (element.links - minLink) / (maxLink - minLink);
     });
-    console.log(JSON.stringify(results));
-  })
+     console.log(JSON.stringify(results));
+    });
 }
 
 // getPopularityAll([{name: 'Bran the Builder'}, {name: 'Victarion Greyjoy'}], './pagerank')
 
-function ResultObject (name) {
+function ResultObject (name,error) {
+   error =  (typeof error !== 'undefined') ? error : false;
   return {
     name: name,
     normalizedScore: '?', // normalized score count
@@ -102,6 +109,7 @@ function ResultObject (name) {
     normalizedConnections: '?', // a link means a connection -> enumerate connections
     score: 0,
     links: 0,
-    connections: 0
+    connections: 0,
+    error: error
   };
 }
