@@ -4,6 +4,8 @@ var request = require('request');
 var getPopularity = require("./popularity.js");
 var promise = require('promise');
 
+var filterSet = [/House (?=\w*)/ig];
+
 
 
 // Current GoT year
@@ -151,9 +153,11 @@ function createARFF(outfilepath, json_input) {
     //
     
     // Various Features
-    arff_output.write('@attribute hasHeir numeric\n');
-    arff_output.write('@attribute hasHeirAlive numeric\n');
-    arff_output.write('@attribute hasTitle numeric\n');
+    arff_output.write('@attribute hasHeir {true,false}\n');
+    arff_output.write('@attribute hasHeirAlive {true,false}\n');
+    arff_output.write('@attribute hasTitle {true,false}\n');
+    arff_output.write('@attribute hasHouse {true,false}\n');
+
 
 
     //
@@ -166,6 +170,15 @@ function createARFF(outfilepath, json_input) {
     arff_output.write('@data\n');
 
     json_input.forEach(function(character) {
+        
+        //Check filterset first
+            for(var i=0;i<filterSet.length;i++){
+              if( character.name.match(filterSet[i]) ){
+                  return;
+              }
+            }
+        //
+        
         var line = "";
 
         line += parseStr(character.name) + ",";
@@ -195,9 +208,11 @@ function createARFF(outfilepath, json_input) {
         //
 
         // Various features implementation
-        line += (typeof character.heir !== 'undefined')? (1 + ",") : (0 + ",");
+        line += (typeof character.heir !== 'undefined')? ("true" + ",") : ("false" + ",");
         line += hasHeirAlive(json_input,character) + ",";
-        line += (typeof character.title !== 'undefined')? (1 + ",") : (0 + ",");
+        line += (typeof character.title !== 'undefined')? ("true" + ",") : ("false" + ",");
+        line += (typeof character.house !== 'undefined')? ("true" + ",") : ("false" + ",");
+
 
         //
 
@@ -277,14 +292,14 @@ function calcStatus(character) {
     return '\'alive\'';
 }
 
-function calcStatusInt(character) {
+function calcStatusBool(character) {
     if (typeof character.dateOfDeath !== 'undefined') {
-        return 0;		// character is dead
+        return false;		// character is dead
     }
     if (typeof character.dateOfBirth !== 'undefined' && (currentYear - character.dateOfBirth) > maxAge) {
-        return 0;		// character is probably dead, but 'dateOfDeath' is missing
+        return false;		// character is probably dead, but 'dateOfDeath' is missing
     }
-    return 1;
+    return true;
 }
 
 
@@ -353,11 +368,11 @@ function calcGender(character) {
 
 function hasHeirAlive(dataset,character){
     if(typeof character.heir === 'undefined'){
-        return 0;       //TODO: No heir maybe return '?' ??
+        return false;       //TODO: No heir maybe return '?' ??
     }
     var temp = dataset.filter(function(element){
         return character.heir === element.name;
     });
-    return (typeof temp[0] !== 'undefined') ? calcStatusInt(temp[0]) : "?"; //false: there is a heir but we dont know if dead or alive -> not in db (e.g. rhaenyra)
+    return (typeof temp[0] !== 'undefined') ? calcStatusBool(temp[0]) : "?"; //false: there is a heir but we dont know if dead or alive -> not in db (e.g. rhaenyra)
 }
 
