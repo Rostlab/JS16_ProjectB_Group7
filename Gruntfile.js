@@ -2,7 +2,7 @@ module.exports = function(grunt) {
 
   grunt.initConfig({
     jshint: {
-      files: ['Gruntfile.js', 'weka_test/*.js'],
+      files: ['Gruntfile.js', 'npm.js', 'weka_test/*.js'],
       options: {
         globals: {
           jQuery: true
