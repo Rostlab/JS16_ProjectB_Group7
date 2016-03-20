@@ -1,5 +1,5 @@
-const fDB = require('./filterDB.js');
-const fs = require('fs');
+var fDB = require('./filterDB.js');
+var fs = require('fs');
 
 var f = new fDB.filter();
 var obj = [{name:'emily'}];
