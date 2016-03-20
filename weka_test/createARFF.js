@@ -148,6 +148,12 @@ function createARFF(outfilepath, json_input) {
     arff_output.write('@attribute connections numeric\n');
 
     getPopularity(json_input, "./../pagerank/");
+    //
+    
+    // Various Features
+    arff_output.write('@attribute hasHeir numeric\n');
+    arff_output.write('@attribute hasHeirAlive numeric\n');
+    arff_output.write('@attribute hasTitle numeric\n');
 
 
     //
@@ -186,6 +192,13 @@ function createARFF(outfilepath, json_input) {
         line += character.normalizedScore + ",";
         line += character.normalizedLinks + ",";
         line += character.normalizedConnections + ",";
+        //
+
+        // Various features implementation
+        line += (typeof character.heir !== 'undefined')? (1 + ",") : (0 + ",");
+        line += hasHeirAlive(json_input,character) + ",";
+        line += (typeof character.title !== 'undefined')? (1 + ",") : (0 + ",");
+
         //
 
         line += calcStatus(character) + "\n";
@@ -264,6 +277,16 @@ function calcStatus(character) {
     return '\'alive\'';
 }
 
+function calcStatusInt(character) {
+    if (typeof character.dateOfDeath !== 'undefined') {
+        return 0;		// character is dead
+    }
+    if (typeof character.dateOfBirth !== 'undefined' && (currentYear - character.dateOfBirth) > maxAge) {
+        return 0;		// character is probably dead, but 'dateOfDeath' is missing
+    }
+    return 1;
+}
+
 
 
 function fixStr(strInput) {
@@ -328,5 +351,13 @@ function calcGender(character) {
 }
 
 
-
+function hasHeirAlive(dataset,character){
+    if(typeof character.heir === 'undefined'){
+        return 0;       //TODO: No heir maybe return '?' ??
+    }
+    var temp = dataset.filter(function(element){
+        return character.heir === element.name;
+    });
+    return (typeof temp[0] !== 'undefined') ? calcStatusInt(temp[0]) : "?"; //false: there is a heir but we dont know if dead or alive -> not in db (e.g. rhaenyra)
+}
 
