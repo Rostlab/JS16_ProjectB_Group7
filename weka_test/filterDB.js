@@ -110,7 +110,6 @@ filterByPercentage = function(current) {
 
 initFilterByPopularity = function(obj) {
 	var listCharachters = [];
-	console.log('init');
 	for (var id in obj) {
 		if (obj[id].name !== undefined) {
 			listCharachters.push(obj[id].name);
@@ -120,20 +119,18 @@ initFilterByPopularity = function(obj) {
 	// promisedResults contains the result of the popularity query, just create a map with the score
 	for (var resultId in popularity.promisedResults) {
 		var result = popularity.promisedResults[resultId];
-		console.log(result);
 		if (result.error === undefined) {
 			this.params.popularityByName[result.name] = result.score;
 		}
 	}
-}
+};
 
 filterByPopularity = function(current) {
-	console.log('popularity ' + current.name);
 	if (current.name !== undefined && this.params.popularityByName[current.name] !== undefined) {
 		return (this.params.popularityByName[current.name] > this.params.min_popularity);
 	}
 	return false;
-}
+};
 
 function filterEach(obj,required_filters,optional_filters,num_true_filters) {
 	if (num_true_filters === undefined) {
@@ -142,14 +139,14 @@ function filterEach(obj,required_filters,optional_filters,num_true_filters) {
 	}
 
 	//init functions
-	for (var filter in required_filters) {
-		if (required_filters[filter].init !== undefined) {
-			required_filters[filter].init(obj);
+	for (var filterR in required_filters) {
+		if (required_filters[filterR].init !== undefined) {
+			required_filters[filterR].init(obj);
 		}
 	}
-	for (var filter in optional_filters) {
-		if (optional_filters[filter].init !== undefined) {
-			optional_filters[filter].init(obj);
+	for (var filterO in optional_filters) {
+		if (optional_filters[filterO].init !== undefined) {
+			optional_filters[filterO].init(obj);
 		}
 	}
 
@@ -157,7 +154,6 @@ function filterEach(obj,required_filters,optional_filters,num_true_filters) {
 	for (var idObj = obj.length-1;idObj >= 0;idObj--) {
 		// required filters
 		for (var idRequired in required_filters) {
-			console.log()
 			var filter = required_filters[idRequired];
 			if(!filter.fun(obj[idObj])) {
 				obj.splice(idObj,1);
@@ -168,8 +164,8 @@ function filterEach(obj,required_filters,optional_filters,num_true_filters) {
 		if (obj[idObj] !== undefined) {
 			for (var idOptional in optional_filters) {
 				var tolerancy = optional_filters.length - num_true_filters;
-				var filter = optional_filters[idOptional];
-				if(!filter.fun(obj[idObj])) {
+				var filt = optional_filters[idOptional];
+				if(!filt.fun(obj[idObj])) {
 					tolerancy--;
 					if (tolerancy < 0) {
 						obj.splice(idObj,1);
