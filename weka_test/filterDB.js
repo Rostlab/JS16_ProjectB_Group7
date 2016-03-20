@@ -176,5 +176,5 @@ function filterEach(obj,required_filters,optional_filters,num_true_filters) {
 		}
 	}
 	return obj;
-};
+}
 
