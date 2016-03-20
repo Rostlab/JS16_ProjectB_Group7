@@ -4,7 +4,7 @@ var centrality = require('ngraph.centrality');
 var graph = require('ngraph.graph')();
 var promisedResults = [];
 
-module.exports = getPopularityAll
+module.exports = getPopularityAll;
 
 function getPopularityAll(dataset, pgFolder) {
     var maxScore = 0,
@@ -31,7 +31,7 @@ function getPopularityAll(dataset, pgFolder) {
                 obj.score += element.score;
                 obj.links += element.level;
                 obj.connections = obj.connections += 1;
-            })
+            });
             promisedResults.push(obj);
             // console.log(character.name);
         } catch (exc) {
@@ -84,7 +84,7 @@ function getPopularityAll(dataset, pgFolder) {
         char.normalizedLinks = (element.links - minLink) / (maxLink - minLink);
     });
     // return promisedResults;
-};
+}
 
 // getPopularityAll([{ name: 'Bran the Builder' }, { name: 'Victarion Greyjoy' }], './pagerank')
 
