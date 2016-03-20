@@ -84,7 +84,7 @@ function getPopularityAll(dataset, pgFolder) {
         char.normalizedLinks = (element.links - minLink) / (maxLink - minLink);
     });
     // return promisedResults;
-}
+};
 
 // getPopularityAll([{ name: 'Bran the Builder' }, { name: 'Victarion Greyjoy' }], './pagerank')
 
