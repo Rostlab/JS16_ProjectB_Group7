@@ -1,4 +1,4 @@
-
+var fDB = require('./filterDB.js');
 var fs = require('fs');
 var request = require('request');
 
@@ -56,8 +56,11 @@ function ARFF_from_database()
 					
 					json_house = getNumHousesOverlord(json_house);
 					json_char  = addCharacterAttributes(json_char, json_house);
+					json_char = computeAttributes(json_char);
 					
-					// TODO: apply filtering to json_char
+					var f = new fDB.filter();
+					f.and(fDB.popularity_filter(0,1000));
+					json_char = f.evaluate(json_char);
 					
 					createARFF('./test.arff', json_char);
 					
@@ -69,6 +72,16 @@ function ARFF_from_database()
 			console.log("error.");
 		}
 	});
+}
+
+// compute the remaining attributes (for the attribute filter to work)
+function computeAttributes(obj) {
+	obj.forEach(function(character) {
+		character.age = calcAge(character);
+		character.ageGroup = calcAgeGroup(character);
+		character.gender = calcGender(character);
+	});
+	return obj;
 }
 
 
@@ -167,9 +180,9 @@ function createARFF(outfilepath, json_input)
         
 		line += parseNum( character.house_founded ) + ",";
 		line += parseNum( character.num_houses_overlord ) + ",";
-		line += calcAge(character) + ",";
-        line += calcAgeGroup(character) + ",";
-		line += calcGender(character) + ",";
+		line += character.age + ",";
+        line += character.ageGroup + ",";
+		line += character.gender + ",";
 		
 		line += calcStatus(character) + "\n";
 		

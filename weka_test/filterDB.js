@@ -47,8 +47,8 @@ module.exports = {
 	},
 
 	// TODO: read popularity of character
-	popularity_filter : function(percentage) {
-		component = new module.exports.filter_component(filterByPopularity,{popularityByName:{},min_popularity:percentage});
+	popularity_filter : function(percentage,max_char) {
+		component = new module.exports.filter_component(filterByPopularity,{popularityByName:{},min_popularity:percentage,max_char:max_char});
 		component.init = initFilterByPopularity;
 		return component;
 	},
@@ -112,16 +112,16 @@ initFilterByPopularity = function(obj) {
 	var listCharachters = [];
 	for (var id in obj) {
 		if (obj[id].name !== undefined) {
-			listCharachters.push(obj[id].name);
+			listCharachters.push({name:obj[id].name});
 		}
 	}
-	//popularity.getPopularityAll(listCharachters,'./pagerank');
-	// promisedResults contains the result of the popularity query, just create a map with the score
-	for (var resultId in popularity.promisedResults) {
-		var result = popularity.promisedResults[resultId];
-		if (result.error === undefined) {
-			this.params.popularityByName[result.name] = result.score;
-		}
+	popularity(listCharachters,'../pagerank');
+	listCharachters.sort(function(a, b) {
+    	return parseFloat(b.normalizedScore) - parseFloat(a.normalizedScore);
+	});
+	for (var charId = 0; charId < this.params.max_char;charId++) {
+		char = listCharachters[charId];
+		this.params.popularityByName[char.name] = char.normalizedScore;
 	}
 };
 
