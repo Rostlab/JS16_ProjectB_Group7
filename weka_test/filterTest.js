@@ -2,14 +2,14 @@ const fDB = require('./filterDB.js');
 const fs = require('fs');
 
 var f = new fDB.filter();
-var obj = {name:'emily'};
+var obj = [{name:'emily'}];
 
 // create all filters in the library and require all to be satisfied
 
 // charachters with at least one attribute between death and birth
 f.and(fDB.dead_alive_filter());
 // most popular charachters COMING SOON
-f.and(fDB.popularity_filter());
+f.and(fDB.popularity_filter(10));
 // charachters that has the sum of the attributes rank (weka rank) at least 20
 f.and(fDB.meaningful_attributes_filter(20));
 
@@ -36,4 +36,10 @@ f.and(new fDB.filter_component(function(current) {
 },{'name':''}));
 
 // evaluate the filter to return the new object
-var newObj = f.evaluate(obj);
+//var newObj = f.evaluate(obj);
+
+f2 = new fDB.filter();
+f2.and(fDB.popularity_filter(10));
+console.log('obj ' + obj);
+var newObj = f2.evaluate(obj);
+console.log('new ' + newObj);
