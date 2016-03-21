@@ -1,11 +1,11 @@
-
 var fs = require('fs');
 var request = require('request');
-var getPopularity = require("./popularity.js");
 var promise = require('promise');
+var getPopularity = require("./popularity.js");
+var fDB = require('./filterDB.js');
+
 
 var filterSet = [/House (?=\w*)/ig];
-
 
 
 // Current GoT year
@@ -58,11 +58,16 @@ function ARFF_from_database() {
                     var json_char = JSON.parse(character_data);
                     var json_house = JSON.parse(house_data);
 
+					getPopularity(json_char, "./../pagerank/");
+
                     json_house = getNumHousesOverlord(json_house);
                     json_char = addCharacterAttributes(json_char, json_house);
-
-                    // TODO: apply filtering to json_char
-
+					json_char = computeAttributes(json_char);
+					
+					var f = new fDB.filter();
+					f.and(fDB.popularity_filter(0,1000));
+					json_char = f.evaluate(json_char);
+					
                     createARFF('./test.arff', json_char);
 
                 } else {
@@ -73,6 +78,18 @@ function ARFF_from_database() {
             console.log("error.");
         }
     });
+}
+
+
+
+// compute the remaining attributes (for the attribute filter to work)
+function computeAttributes(obj) {
+	obj.forEach(function(character) {
+		character.age = calcAge(character);
+		character.ageGroup = calcAgeGroup(character);
+		character.gender = calcGender(character);
+	});
+	return obj;
 }
 
 
@@ -149,7 +166,6 @@ function createARFF(outfilepath, json_input) {
     arff_output.write('@attribute links numeric\n');
     arff_output.write('@attribute connections numeric\n');
 
-    getPopularity(json_input, "./../pagerank/");
     //
 
     // Various Features
@@ -167,9 +183,6 @@ function createARFF(outfilepath, json_input) {
 
     arff_output.write('@attribute isNoble {true,false}\n');
     arff_output.write('@attribute multipleBooks {true,false}\n');
-
-
-
 
     //
 
@@ -208,9 +221,9 @@ function createARFF(outfilepath, json_input) {
 
         line += parseNum(character.house_founded) + ",";
         line += parseNum(character.num_houses_overlord) + ",";
-        line += calcAge(character) + ",";
-        line += calcAgeGroup(character) + ",";
-        line += calcGender(character) + ",";
+		line += character.age + ",";
+        line += character.ageGroup + ",";
+		line += character.gender + ",";
 
         //Popularity and stuff
         line += character.normalizedScore + ",";
@@ -402,7 +415,7 @@ function hasSpouseAlive(dataset, character) {
     var temp = dataset.filter(function(element) {
         return character.spouse === element.name;
     });
-    return (typeof temp[0] !== 'undefined') ? calcStatusBool(temp[0]) : "?"; //false: there is a heir but we dont know if dead or alive -> not in db (e.g. rhaenyra)
+    return (typeof temp[0] !== 'undefined') ? calcStatusBool(temp[0]) : "?"; //false: there is a spouse but we dont know if dead or alive -> not in db (e.g. rhaenyra)
 }
 
 
