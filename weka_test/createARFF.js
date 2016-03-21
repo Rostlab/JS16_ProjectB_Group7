@@ -151,12 +151,23 @@ function createARFF(outfilepath, json_input) {
 
     getPopularity(json_input, "./../pagerank/");
     //
-    
+
     // Various Features
     arff_output.write('@attribute hasHeir {true,false}\n');
     arff_output.write('@attribute hasHeirAlive {true,false}\n');
     arff_output.write('@attribute hasTitle {true,false}\n');
     arff_output.write('@attribute hasHouse {true,false}\n');
+
+    //
+
+    //Mooooooar features
+    arff_output.write('@attribute hasSpouse {true,false}\n');
+    arff_output.write('@attribute isSpouseAlive {true,false}\n');
+
+
+    arff_output.write('@attribute isNoble {true,false}\n');
+    arff_output.write('@attribute multipleBooks {true,false}\n');
+
 
 
 
@@ -170,15 +181,15 @@ function createARFF(outfilepath, json_input) {
     arff_output.write('@data\n');
 
     json_input.forEach(function(character) {
-        
+
         //Check filterset first
-            for(var i=0;i<filterSet.length;i++){
-              if( character.name.match(filterSet[i]) ){
-                  return;
-              }
+        for (var i = 0; i < filterSet.length; i++) {
+            if (character.name.match(filterSet[i])) {
+                return;
             }
+        }
         //
-        
+
         var line = "";
 
         line += parseStr(character.name) + ",";
@@ -208,10 +219,17 @@ function createARFF(outfilepath, json_input) {
         //
 
         // Various features implementation
-        line += (typeof character.heir !== 'undefined')? ("true" + ",") : ("false" + ",");
-        line += hasHeirAlive(json_input,character) + ",";
-        line += (typeof character.title !== 'undefined')? ("true" + ",") : ("false" + ",");
-        line += (typeof character.house !== 'undefined')? ("true" + ",") : ("false" + ",");
+        line += (typeof character.heir !== 'undefined') ? ("true" + ",") : ("false" + ",");
+        line += hasHeirAlive(json_input, character) + ",";
+        line += (typeof character.title !== 'undefined') ? ("true" + ",") : ("false" + ",");
+        line += (typeof character.house !== 'undefined') ? ("true" + ",") : ("false" + ",");
+        //
+
+        //Mooooooar
+        line += (typeof character.spouse !== 'undefined') ? ("true" + ",") : ("false" + ",");
+        line += hasSpouseAlive(json_input, character) + ",";
+        line += isNoble(json_input, character) + ",";
+        line += ((typeof character.books !== 'undefined') && (character.books.length > 1)) ? ("true" + ",") : ("false" + ",");
 
 
         //
@@ -366,13 +384,48 @@ function calcGender(character) {
 }
 
 
-function hasHeirAlive(dataset,character){
-    if(typeof character.heir === 'undefined'){
+function hasHeirAlive(dataset, character) {
+    if (typeof character.heir === 'undefined') {
         return false;       //TODO: No heir maybe return '?' ??
     }
-    var temp = dataset.filter(function(element){
+    var temp = dataset.filter(function(element) {
         return character.heir === element.name;
     });
     return (typeof temp[0] !== 'undefined') ? calcStatusBool(temp[0]) : "?"; //false: there is a heir but we dont know if dead or alive -> not in db (e.g. rhaenyra)
 }
 
+
+function hasSpouseAlive(dataset, character) {
+    if (typeof character.spouse === 'undefined') {
+        return false;       //TODO: No heir maybe return '?' ??
+    }
+    var temp = dataset.filter(function(element) {
+        return character.spouse === element.name;
+    });
+    return (typeof temp[0] !== 'undefined') ? calcStatusBool(temp[0]) : "?"; //false: there is a heir but we dont know if dead or alive -> not in db (e.g. rhaenyra)
+}
+
+
+function isNoble(dataset, character) {
+    var resfather=false,resmother=false;
+    
+    if (typeof character.title !== 'undefined') {
+        return true; //has title is noble huehuehueheue
+    }
+
+    if (typeof character.father !== 'undefined') {
+        var temp = dataset.filter(function(element) {
+            return (character.father === element.name);
+        });
+        resfather = (typeof temp[0] !== 'undefined') ? isNoble(dataset,temp[0]) : false;
+    }
+
+    if (typeof character.mother !== 'undefined') {
+        var temp2 = dataset.filter(function(element) {
+            return (character.mother === element.name);
+        });
+        resmother = (typeof temp2[0] !== 'undefined') ? isNoble(dataset,temp2[0]) : false;
+    }
+
+    return (resfather || resmother);
+}
