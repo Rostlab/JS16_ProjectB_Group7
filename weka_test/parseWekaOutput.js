@@ -125,15 +125,15 @@ function handleCharacterPrediction(line)
 	// only store PLOD of alive characters
 	if( character.status == 'alive' ) {
 	
-		if( character.status_pred == 'alive' ) {
-			character.plod = 1.0 - character.pred_prob;
-		}
-		else if( character.status_pred == 'dead' ) {
+		if( character.status_pred == 'dead' ) {
 			character.plod = character.pred_prob;
 		}
+		/*else if( character.status_pred == 'alive' ) {
+			character.plod = 1.0 - character.pred_prob;
+		}*/
 	} else {
 		// already dead
-		character.plod = 0;
+		//character.plod = 0/NaN/undefined?;
 	}
 	
 	return character;
