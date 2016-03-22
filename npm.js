@@ -40,30 +40,31 @@ module.exports = (function() {
 
 
 	this.getAllCharPredictions = function() {
-		return Object.keys(this.data_char).reduce(function(newObj,char) {
-			newObj[char.name] = char.plod;
+		return Object.keys(this.data_char).reduce(function(newObj,charName) {
+			newObj[charName] = this.data_char[charName].plod;
+			console.log(newObj);
 			return newObj;
 		},{});
 	};
 
-	this.getStatus = function(charachter_name) {
-		var name = attribute_name.toString().toLowerCase().replace(/[\'()]/g, '');
+	this.getStatus = function(character_name) {
+		var name = character_name.toString().toLowerCase().replace(/[\'()]/g, '');
 		return this.data_char[name].status;				
-	}
+	};
 
-	this.getPredStatus = function(charachter_name) {
-		var name = attribute_name.toString().toLowerCase().replace(/[\'()]/g, '');
+	this.getPredStatus = function(character_name) {
+		var name = character_name.toString().toLowerCase().replace(/[\'()]/g, '');
 		return this.data_char[name].pred_status;				
-	}
+	};
 
 	this.getAllAliveCharPredictions = function() {
-		return Object.keys(this.data_char).reduce(function(newObj,char) {
-			if (char.status == 'alive') {
-				newObj[char.name] = char.plod;
+		return Object.keys(this.data_char).reduce(function(newObj,charName) {
+			if (this.data_char[charName].status == 'alive') {
+				newObj[charName] = this.data_char[charName].plod;
 			}
 			return newObj;
 		},{});
-	}
+	};
 
 
 	this.getAllAttrRanks = function() {
