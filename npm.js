@@ -14,7 +14,7 @@ module.exports = (function() {
 		var array_char = JSON.parse(json_char);
 		
 		array_char.forEach( function(char) {
-			this.data_char[char.name] = char.plod;
+			this.data_char[char.name] = char;
 		});
 
 		// read attribute contributions
@@ -29,7 +29,7 @@ module.exports = (function() {
 
 	this.getPlod = function(character_name) {
 		var name = character_name.toString().toLowerCase().replace(/[\'()]/g, '');
-		return parseFloat(this.data_char[name]);
+		return parseFloat(this.data_char[name].plod);
 	};
 
 
@@ -40,8 +40,30 @@ module.exports = (function() {
 
 
 	this.getAllCharPredictions = function() {
-		return this.data_char;
+		return Object.keys(this.data_char).reduce(function(newObj,char) {
+			newObj[char.name] = char.plod;
+			return newObj;
+		},{});
 	};
+
+	this.getStatus = function(charachter_name) {
+		var name = attribute_name.toString().toLowerCase().replace(/[\'()]/g, '');
+		return this.data_char[name].status;				
+	}
+
+	this.getPredStatus = function(charachter_name) {
+		var name = attribute_name.toString().toLowerCase().replace(/[\'()]/g, '');
+		return this.data_char[name].pred_status;				
+	}
+
+	this.getAllAliveCharPredictions = function() {
+		return Object.keys(this.data_char).reduce(function(newObj,char) {
+			if (char.status == 'alive') {
+				newObj[char.name] = char.plod;
+			}
+			return newObj;
+		},{});
+	}
 
 
 	this.getAllAttrRanks = function() {
