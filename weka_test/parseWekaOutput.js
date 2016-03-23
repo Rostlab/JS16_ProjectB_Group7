@@ -118,8 +118,8 @@ function handleCharacterPrediction(line)
 	
 	character.status      = parseStatus( columns[2] );
 	character.status_pred = parseStatus( columns[3] );
-	character.pred_prob   = parseFloat(  columns[4].replace('*', '') );
-	character.pred_distr  = parseFloat(  columns[5].replace('*', '') );
+	character.pred_err    = parseFloat(  columns[4].replace('*', '') );
+	character.pred_prob   = parseFloat(  columns[5].replace('*', '') );
 	character.name        = columns.slice(6, -1).join(" ").replace(/[()\']/g, '');
 	
 	// only store PLOD of alive characters
