@@ -21,15 +21,15 @@ module.exports = (function() {
 
 		array_char.sort( function(a, b) {
 			var val_a = -1, val_b = -1;
-			if( typeof a.plod == "number" ) { val_a = a.plod; }
-			if( typeof b.plod == "number" ) { val_b = b.plod; }
+			if( typeof a.pred_prob == "number" ) { val_a = a.pred_prob; }
+			if( typeof b.pred_prob == "number" ) { val_b = b.pred_prob; }
 			return (val_b - val_a);
 		});
 		for(var i=0; i<array_char.length; i++) {
-			if( typeof array_char[i].plod != "number" ) {
+			if( typeof array_char[i].pred_prob != "number" ) {
 				break;	// character does not exist, is already dead or is not predicted to die.
 			}
-			this.top_pred.push( [array_char[i].name, array_char[i].plod] );
+			this.top_pred.push( [array_char[i].name, array_char[i].pred_prob] );
 		}
 
 		// read attribute contributions
@@ -46,12 +46,12 @@ module.exports = (function() {
 
 		array_top.sort( function(a, b) {
 			var val_a = -1, val_b = -1;
-			if( typeof a.plod == "number" ) { val_a = a.plod; }
-			if( typeof b.plod == "number" ) { val_b = b.plod; }
+			if( typeof a.pred_prob == "number" ) { val_a = a.pred_prob; }
+			if( typeof b.pred_prob == "number" ) { val_b = b.pred_prob; }
 			return (val_b - val_a);
 		});
 		for(i=0; i<array_top.length; i++) {
-			this.top_actual.push( [array_top[i].name, array_top[i].plod] );
+			this.top_actual.push( [array_top[i].name, array_top[i].pred_prob] );
 		}
 	};
 
