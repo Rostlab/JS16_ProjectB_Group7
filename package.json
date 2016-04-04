@@ -1,6 +1,6 @@
 {
   "name": "gotarffplod",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Project B (Which character is in most pressing need for life insurance?) of Group 7, JavaScript Seminar 2016, RostLab",
   "main": "npm.js",
   "scripts": {
