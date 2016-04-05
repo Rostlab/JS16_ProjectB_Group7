@@ -122,9 +122,9 @@ function handleCharacterPrediction(line)
 	character.pred_prob   = parseFloat(  columns[5].replace('*', '') );
 	character.name        = columns.slice(6, -1).join(" ").replace(/[()\']/g, '');
 	
-	// only store PLOD of alive characters
+	character.plod = character.pred_prob;
+	/*
 	if( character.status == 'alive' ) {
-	
 		if( character.status_pred == 'dead' ) {
 			character.plod = character.pred_prob;
 		}
@@ -132,9 +132,9 @@ function handleCharacterPrediction(line)
 			character.plod = 1.0 - character.pred_prob;
 		}
 	} else {
-		// already dead
-		//character.plod = 0/NaN/undefined?;
+		character.plod = -1.0;
 	}
+	*/
 	
 	return character;
 }
