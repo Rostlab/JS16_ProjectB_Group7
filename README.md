@@ -3,28 +3,46 @@ Game of Thrones characters are always in danger of being eliminated. The challen
 
 ## Node
 Install it with NPM or add it to your package.json:
-`npm install gotarffplod`
+```
+npm install gotarffplod
+```
 Then:
-`var gotplod = require('gotarffplod');`
+```
+var gotplod = require('gotarffplod');
+```
 
 ## API
-`gotplod.init()`
+```
+gotplod.init()
+```
 Fill the arrays with the data from prediction json.
 
-`gotplod.getPlod()`
+```
+gotplod.getPlod()
+```
 //todo add description
 
-`gotplod.getTop()`
+```
+gotplod.getTop()
+```
 //todo add description
 
-`gotplod.getTopPredicted()`
+```
+gotplod.getTopPredicted()
+```
 //todo add description
 
-`gotplod.getAttrRank()`
+```
+gotplod.getAttrRank()
+```
 //todo add description
 
-`gotplod.getAllCharPredictions()`
+```
+gotplod.getAllCharPredictions()
+```
 //todo add description
 
-`gotplod.getAllAttrRanks()`
+```
+gotplod.getAllAttrRanks()
+```
 //todo add description
