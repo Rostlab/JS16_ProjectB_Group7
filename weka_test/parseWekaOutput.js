@@ -128,9 +128,9 @@ function handleCharacterPrediction(line)
 		if( character.status_pred == 'dead' ) {
 			character.plod = character.pred_prob;
 		}
-		/*else if( character.status_pred == 'alive' ) {
+		else if( character.status_pred == 'alive' ) {
 			character.plod = 1.0 - character.pred_prob;
-		}*/
+		}
 	} else {
 		// already dead
 		//character.plod = 0/NaN/undefined?;
