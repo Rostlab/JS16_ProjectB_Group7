@@ -17,7 +17,7 @@ module.exports = (function() {
 		var array_char = JSON.parse(json_char);
 		
 		array_char.forEach( function(char) {
-			this.data_char[char.name] = char.plod;
+			this.data_char[char.name] = char;
 		});
 
 		array_char.sort( function(a, b) {
@@ -59,7 +59,7 @@ module.exports = (function() {
 
 	this.getPlod = function(character_name) {
 		var name = character_name.toString().toLowerCase().replace(/[\'()]/g, '');
-		return this.data_char[name];
+		return parseFloat(this.data_char[name].plod);
 	};
 
 
@@ -84,7 +84,30 @@ module.exports = (function() {
 
 
 	this.getAllCharPredictions = function() {
-		return this.data_char;
+		return Object.keys(this.data_char).reduce(function(newObj,charName) {
+			newObj[charName] = this.data_char[charName].plod;
+			console.log(newObj);
+			return newObj;
+		},{});
+	};
+
+	this.getStatus = function(character_name) {
+		var name = character_name.toString().toLowerCase().replace(/[\'()]/g, '');
+		return this.data_char[name].status;				
+	};
+
+	this.getPredStatus = function(character_name) {
+		var name = character_name.toString().toLowerCase().replace(/[\'()]/g, '');
+		return this.data_char[name].pred_status;				
+	};
+
+	this.getAllAliveCharPredictions = function() {
+		return Object.keys(this.data_char).reduce(function(newObj,charName) {
+			if (this.data_char[charName].status == 'alive') {
+				newObj[charName] = this.data_char[charName].plod;
+			}
+			return newObj;
+		},{});
 	};
 
 
