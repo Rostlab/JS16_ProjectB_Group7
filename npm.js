@@ -17,7 +17,7 @@ module.exports = (function() {
 		var array_char = JSON.parse(json_char);
 		
 		array_char.forEach( function(char) {
-			this.data_char[char.name] = char.plod;
+			this.data_char[char.name] = char.pred_prob;
 		});
 
 		array_char.sort( function(a, b) {
